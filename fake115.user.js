@@ -414,20 +414,28 @@ unsafeWindow.browserInterface = cloneInto(browserInterface, unsafeWindow, {
 });
 
 unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
-  var cont, error, fakeSizeLimitGetter, fastSig, fastUpload, finput, getUserKey, js_top_panel_box, procLabel, uploadinfo;
+  var cont, error, fakeSizeLimitGetter, fastSig, fastUpload, finput, getUserKey, js_top_panel_box, icon_add, procLabel, uploadinfo;
   try {
-    js_top_panel_box = unsafeWindow.document.getElementById('js_top_panel_box');
+    js_top_panel_box = unsafeWindow.document.getElementById('js_upload_btn');
     if (js_top_panel_box != null) {
-      cont = document.createElement('div');
+      cont = document.createElement('a');
+      icon_add = document.createElement('i');
+      icon_add.classList.add('ibco-add');
       finput = document.createElement('input');
       finput.setAttribute('type', 'file');
+      finput.style.display = 'none';
       procLabel = document.createElement('span');
-      cont.appendChild(finput);
+      procLabel.innerHTML = "快速上傳服務器已有文件"
+      cont.appendChild(icon_add);
       cont.appendChild(procLabel);
-      js_top_panel_box.appendChild(cont);
-      cont.style.position = 'absolute';
-      cont.style.top = '20px';
-      cont.style.left = '320px';
+      cont.appendChild(finput);
+      cont.classList.add('button');
+      cont.classList.add('btn-linear-blue');
+      cont.href = "javascript:;";
+      cont.addEventListener('click', ()=>{
+          finput.click();
+      });
+      js_top_panel_box.parentElement.insertBefore(cont, js_top_panel_box);
       fastSig = function(userid, fileid, target, userkey) {
         var sha1, tmp;
         sha1 = new jsSHA('SHA-1', 'TEXT');
@@ -440,13 +448,11 @@ unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
         });
       };
       uploadinfo = null;
-        //console.log(unsafeWindow);
       fastUpload = function(arg) {
         var fileid, filename, filesize, preid, tm, tmus;
         fileid = arg.fileid, preid = arg.preid, filename = arg.filename, filesize = arg.filesize;
         tmus = (new Date()).getTime();
         tm = Math.floor(tmus / 1000);
-        console.log(`Upload to U_${unsafeWindow.Main.Setting.GetActive().aid}_${unsafeWindow.Main.Setting.GetActive().cid}`);
         return GM_xmlhttpRequest({
           method: 'POST',
           url: uploadinfo.url_upload + '?' + dictToQuery({
@@ -474,15 +480,17 @@ unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
           onload: function(response) {
             if (response.status === 200) {
               if (response.response.status === 2) {
-                  unsafeWindow.Main.ReInstance(unsafeWindow.Main.Setting.GetActive());
-                  return unsafeWindow.TOP.Core.MinMessage.Show({text: "Fast Upload Success!", type: "suc", timeout: 2000})
-                //return alert('fastupload OK, refresh window and goto root folder to find it');
+                  unsafeWindow.TOP.Core.MinMessage.Show({text: "Fast Upload Success!", type: "suc", timeout: 2000});
+                  unsafeWindow.setTimeout(()=>{
+                      unsafeWindow.Main.ReInstance(unsafeWindow.Main.Setting.GetActive());
+                  }, 750);
               } else {
-                return unsafeWindow.TOP.Core.MinMessage.Show({text: "Fast Upload Failed! 服務器沒這個東西!", type: "war", timeout: 2000});
+                unsafeWindow.TOP.Core.MinMessage.Show({text: "Fast Upload Failed! 服務器沒這個東西!", type: "war", timeout: 2000});
               }
             } else {
-              return GM_log("response.status = " + response.status);
+              unsafeWindow.TOP.Core.MinMessage.Show({text: "response.status = " + response.status, type: 'war', timeout: 5000});
             }
+            procLabel.innerHTML = "快速上傳服務器已有文件";
           }
         });
       };
