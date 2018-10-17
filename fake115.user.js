@@ -440,11 +440,13 @@ unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
         });
       };
       uploadinfo = null;
+        //console.log(unsafeWindow);
       fastUpload = function(arg) {
         var fileid, filename, filesize, preid, tm, tmus;
         fileid = arg.fileid, preid = arg.preid, filename = arg.filename, filesize = arg.filesize;
         tmus = (new Date()).getTime();
         tm = Math.floor(tmus / 1000);
+        console.log(`Upload to U_${unsafeWindow.Main.Setting.GetActive().aid}_${unsafeWindow.Main.Setting.GetActive().cid}`);
         return GM_xmlhttpRequest({
           method: 'POST',
           url: uploadinfo.url_upload + '?' + dictToQuery({
@@ -453,7 +455,7 @@ unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
             appversion: '2.0.0.0',
             format: 'json',
             isp: 0,
-            sig: fastSig(uploadinfo.user_id, fileid, 'U_1_0', uploadinfo.userkey),
+            sig: fastSig(uploadinfo.user_id, fileid, `U_${unsafeWindow.Main.Setting.GetActive().aid}_${unsafeWindow.Main.Setting.GetActive().cid}`, uploadinfo.userkey),
             t: tm
           }),
           data: dictToForm({
@@ -462,7 +464,7 @@ unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
             filename: filename,
             filesize: filesize,
             preid: preid,
-            target: 'U_1_0',
+            target: `U_${unsafeWindow.Main.Setting.GetActive().aid}_${unsafeWindow.Main.Setting.GetActive().cid}`,
             userid: uploadinfo.user_id
           }),
           responseType: 'json',
@@ -472,9 +474,11 @@ unsafeWindow.document.addEventListener('DOMContentLoaded', function() {
           onload: function(response) {
             if (response.status === 200) {
               if (response.response.status === 2) {
-                return alert('fastupload OK, refresh window and goto root folder to find it');
+                  unsafeWindow.Main.ReInstance(unsafeWindow.Main.Setting.GetActive());
+                  return unsafeWindow.TOP.Core.MinMessage.Show({text: "Fast Upload Success!", type: "suc", timeout: 2000})
+                //return alert('fastupload OK, refresh window and goto root folder to find it');
               } else {
-                return alert('fastupload FAIL, LOL');
+                return unsafeWindow.TOP.Core.MinMessage.Show({text: "Fast Upload Failed! 服務器沒這個東西!", type: "war", timeout: 2000});
               }
             } else {
               return GM_log("response.status = " + response.status);
